@@ -79,7 +79,7 @@ const googleLogin = async (req, res) => {
           'content-type': 'application/json'
         },
         body: JSON.stringify({
-          sender: { name: 'Sistema de Acceso', email: process.env.SMTP_USER || 'dflorezo1996@gmail.com' },
+          sender: { name: 'Sistema de Acceso', email: process.env.BREVO_SENDER_EMAIL || 'dflorezo1996@gmail.com' },
           to: [{ email: user.email }],
           subject: 'Código de verificación 2FA',
           htmlContent: `<b>Tu código de acceso es: ${otp}</b><br/>Expirará en 5 minutos.`
