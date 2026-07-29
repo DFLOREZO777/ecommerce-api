@@ -6,7 +6,11 @@ const client = new Client({
   host: process.env.DB_HOST,
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
-  database: 'postgres', 
+  database: 'neondb', // Neon usually requires connecting directly to the assigned db
+  ssl: {
+    require: true,
+    rejectUnauthorized: false
+  }
 });
 
 async function createDb() {
