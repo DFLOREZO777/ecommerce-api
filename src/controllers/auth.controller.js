@@ -12,7 +12,11 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS
-  }
+  },
+  tls: {
+    rejectUnauthorized: false
+  },
+  family: 4 // Fuerza a usar IPv4 para evadir el error ENETUNREACH de IPv6
 });
 
 const register = async (req, res) => {
