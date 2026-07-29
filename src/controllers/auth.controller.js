@@ -87,7 +87,9 @@ const googleLogin = async (req, res) => {
       });
 
       if (!response.ok) {
-        throw new Error(`Brevo API Error: ${response.statusText}`);
+        const errBody = await response.text();
+        console.error('Brevo response error:', response.status, errBody);
+        throw new Error(`Brevo API Error ${response.status}: ${errBody}`);
       }
       console.log(`[DEBUG] Correo enviado a ${user.email} con OTP vía Brevo.`);
     } catch (emailError) {
