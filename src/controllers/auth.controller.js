@@ -3,7 +3,17 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-// Nodemailer removed in favor of Resend API
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT || 587,
+  secure: process.env.SMTP_SECURE === 'true', 
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
 
 const register = async (req, res) => {
   try {
@@ -71,24 +81,14 @@ const googleLogin = async (req, res) => {
     await user.update({ mfaCode: otpHash, mfaExpires });
 
     try {
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: 'Acme <onboarding@resend.dev>',
-          to: [user.email],
-          subject: 'Código de verificación 2FA',
-          html: `<b>Tu código de acceso es: ${otp}</b><br/>Expirará en 5 minutos.`
-        })
+      await transporter.sendMail({
+        from: `"Sistema de Acceso" <${process.env.SMTP_USER || 'no-reply@ecommerce.com'}>`,
+        to: user.email,
+        subject: 'Código de verificación 2FA',
+        text: `Tu código de acceso es: ${otp}. Expirará en 5 minutos.`,
+        html: `<b>Tu código de acceso es: ${otp}</b><br/>Expirará en 5 minutos.`
       });
-
-      if (!response.ok) {
-        throw new Error(`Resend API Error: ${response.statusText}`);
-      }
-      console.log(`[DEBUG] Correo enviado a ${user.email} con OTP vía Resend.`);
+      console.log(`[DEBUG] Correo enviado a ${user.email} con OTP.`);
     } catch (emailError) {
       console.error('Error al enviar el correo:', emailError);
       console.log(`[DEBUG] El correo falló. OTP generado para ${user.email} es: ${otp}`);
