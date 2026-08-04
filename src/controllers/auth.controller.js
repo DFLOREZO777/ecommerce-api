@@ -70,12 +70,16 @@ const googleLogin = async (req, res) => {
 
     await user.update({ mfaCode: otpHash, mfaExpires });
 
+    // Debug: show first part of Brevo API key (if present)
+    const brevoKey = process.env.BREVO_API_KEY;
+    console.log('[DEBUG] BREVO_API_KEY (first 5 chars):', brevoKey ? brevoKey.slice(0,5) + '...' : 'undefined');
     try {
       const response = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
           'accept': 'application/json',
-          'api-key': process.env.BREVO_API_KEY,
+          // Use the variable directly for clarity
+          'api-key': brevoKey,
           'content-type': 'application/json'
         },
         body: JSON.stringify({
@@ -95,6 +99,7 @@ const googleLogin = async (req, res) => {
     } catch (emailError) {
       console.error('Error al enviar el correo con Brevo:', emailError);
       console.log(`[DEBUG] El correo falló. OTP generado para ${user.email} es: ${otp}`);
+      return res.status(502).json({ message: 'No se pudo enviar el correo de verificación. Por favor, intente de nuevo.', error: emailError.message });
     }
 
     return res.json({ requireOtp: true, email: user.email });
