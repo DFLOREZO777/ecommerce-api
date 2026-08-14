@@ -23,6 +23,17 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
 
+// Wake-up endpoint — lightweight SELECT 1 to bring Neon DB out of suspension
+app.get('/api/wake', async (req, res) => {
+  try {
+    await sequelize.query('SELECT 1');
+    res.json({ status: 'ok', message: 'Database is awake' });
+  } catch (error) {
+    console.error('Wake-up query failed:', error.message);
+    res.status(503).json({ status: 'error', message: 'Database is waking up, try again shortly' });
+  }
+});
+
 // Basic test route
 app.get('/', (req, res) => {
   res.send('E-commerce API is running');
